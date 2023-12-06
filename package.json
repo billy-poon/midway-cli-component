@@ -12,13 +12,6 @@
     "lint": "mwts check",
     "lint:fix": "mwts fix"
   },
-  "keywords": ["midway", "cli", "yargs", "typescript", "decorator", "command"],
-  "author": "Billy Poon",
-  "files": [
-    "dist/**/*.js",
-    "dist/**/*.d.ts",
-    "index.d.ts"
-  ],
   "license": "MIT",
   "devDependencies": {
     "@midwayjs/cli": "^2.0.0",
@@ -43,5 +36,23 @@
   "dependencies": {
     "@midwayjs/bootstrap": "^3.13.0",
     "yargs": "^17.7.2"
-  }
+  },
+  "author": "Billy Poon",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/billy-poon/midway-cli-component"
+  },
+  "keywords": [
+    "midway",
+    "cli",
+    "yargs",
+    "typescript",
+    "decorator",
+    "command"
+  ],
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "index.d.ts"
+  ]
 }
