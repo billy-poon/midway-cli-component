@@ -1,0 +1,12 @@
+{
+  // "extends": "./node_modules/mwts/",
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended"
+  ],
+
+  "ignorePatterns": ["node_modules", "dist", "test", "jest.config.js", "typings", "bootstrap.js"],
+  "env": {
+    "jest": true
+  }
+}
