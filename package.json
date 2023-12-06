@@ -1,12 +1,12 @@
 {
   "name": "midway-cli-component",
-  "version": "0.0.1",
+  "version": "0.0.4",
   "description": "This is a midway component(Framework) running in CLI",
   "main": "dist/index.js",
   "typings": "index.d.ts",
   "scripts": {
     "dev": "cross-env NODE_ENV=local tsx bootstrap.js",
-    "build": "cross-env midway-bin build -c",
+    "build": "cross-env mwts check && midway-bin build -c",
     "test": "cross-env midway-bin test --ts",
     "cov": "cross-env midway-bin cov --ts",
     "lint": "mwts check",

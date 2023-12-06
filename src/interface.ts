@@ -31,9 +31,3 @@ export type IMidwayCLIOptions = {
     argv?: string[] | (() => string[])
     yargs?: yargsConfiguration
 } & IConfigurationOptions
-
-declare module '@midwayjs/core/dist/interface' {
-    interface MidwayConfig {
-        cli?: IMidwayCLIOptions
-    }
-}
