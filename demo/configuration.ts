@@ -1,4 +1,4 @@
-import { Configuration } from '@midwayjs/core'
+import { Configuration, ILogger, Logger } from '@midwayjs/core'
 import * as cli from 'midway-cli-component'
 import { join } from 'path'
 
@@ -10,4 +10,14 @@ import { join } from 'path'
 })
 export class DemoConfiguration
 {
+    @Logger()
+    logger: ILogger
+
+    async onReady() {
+        this.logger.info('demo application ready')
+    }
+
+    async onStop() {
+        this.logger.info('demo application stopping')
+    }
 }

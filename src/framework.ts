@@ -1,12 +1,12 @@
+import { BaseFramework, Framework, MidwayLifeCycleService, getClassMetadata, getCurrentMainFramework, listModule } from '@midwayjs/core'
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
-import { BaseFramework, Framework, getClassMetadata, getCurrentMainFramework, listModule } from '@midwayjs/core'
-import { Application, Context, IMidwayCLIOptions } from './interface'
+import { CLIContext } from './context'
 import { COMMAND_KEY, CommandOptionsRegistered } from './decorator/command.decorator'
 import { getNamedOptions } from './decorator/option.decorator'
 import { getPositionalOptions } from './decorator/positional.decorator'
 import { CommandCtor } from './decorator/types'
-import { CLIContext } from './context'
+import { Application, Context, IMidwayCLIOptions } from './interface'
 
 const logNs = '[midway:cli]'
 
@@ -59,18 +59,24 @@ export class MidwayCLIFramework extends BaseFramework<
             this.addCommand(x)
         }
 
+        // Don't await this promise
+        // to make LifeCycle message
+        // `onServerReady` emitted before `onStop`
         Promise.resolve()
             .then(() => this.app.argv)
-            .finally(() => this.stop())
+            .finally(() => this.destroy())
 
         this.logger.info('%s started', logNs)
     }
 
-    async stop(): Promise<void> {
-        this.logger.info('%s stopping', logNs)
+    async destroy() {
+        const lifeCycle = await this.applicationContext
+            .getAsync(MidwayLifeCycleService)
+        await lifeCycle.stop()
+    }
 
-        await super.stop()
-        this.loggerService.getCurrentLoggerFactory().close()
+    async beforeStop(): Promise<void> {
+        this.logger.info('%s stopping', logNs)
     }
 
     addCommand(commandClass: CommandCtor) {

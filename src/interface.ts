@@ -22,9 +22,20 @@ export type Context = IMidwayContext<CLIContext & {
 
 type yargsConfiguration = Pick<
     { [K in keyof Argv]?: Argv[K] extends ((x: infer P) => Argv) ? P : never },
-    'env' | 'locale' | 'scriptName' |
-    'strict' | 'strictCommands' | 'strictOptions' |
-    'usage' | 'version' | 'wrap'
+    'detectLocale' |
+    'env' |
+    'exitProcess' |
+    'fail' |
+    'help' |
+    'locale' |
+    'scriptName' |
+    'showHelpOnFail' |
+    'strict' |
+    'strictCommands' |
+    'strictOptions' |
+    'usage' |
+    'version' |
+    'wrap'
 >
 
 export type IMidwayCLIOptions = {
