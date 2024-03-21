@@ -55,8 +55,8 @@ import * as cli from 'midway-cli-component'
 
 // 注意 CLI 组件必须作为主框架运行
 const main = process.env.NODE_ENV === 'cli' ? cli : koa
-
 ...
+
 @Configuration({
     imports: [
         main,
@@ -65,7 +65,18 @@ const main = process.env.NODE_ENV === 'cli' ? cli : koa
     ...
 })
 export class MainConfiguration {
-    ...
+    @App()
+    app: IMidwayApplication;
+
+    async onReady() {
+        if (main !== cli) {
+            const app = this.app as koa.Application
+            app.useMiddleware([...])
+            app.useFilter([...])
+            app.useGuard([...])
+            ...
+        }
+    }
 }
 ```
 
