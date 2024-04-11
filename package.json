@@ -1,6 +1,6 @@
 {
   "name": "midway-cli-component",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "This is a midway component(Framework) running in CLI",
   "main": "dist/index.js",
   "typings": "index.d.ts",
