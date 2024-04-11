@@ -1,7 +1,6 @@
-import { MiddlewareFunction } from 'yargs'
-import { ICommand } from '../interface'
+import { CommonMiddleware, Provide, saveClassMetadata, saveModule } from '@midwayjs/core'
+import { Context, ICommand, NextFunction } from '../interface'
 import { CommandCtor, CommandDecorator, Demand } from './types'
-import { Provide, saveClassMetadata, saveModule } from '@midwayjs/core'
 import { toCommandKey } from './utils'
 
 export const COMMAND_KEY = Symbol.for('COMMAND_KEY')
@@ -9,7 +8,7 @@ export const COMMAND_KEY = Symbol.for('COMMAND_KEY')
 export type CommandOptions = {
     command?: string | readonly string[],
     description?: string | false,
-    middlewares?: Array<MiddlewareFunction>,
+    middlewares?: CommonMiddleware<Context, NextFunction, void>[],
     deprecated?: boolean | string,
 }
 export type CommandOptionsRegistered = Demand<CommandOptions, 'command'>

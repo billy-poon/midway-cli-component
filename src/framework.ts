@@ -6,7 +6,7 @@ import { COMMAND_KEY, CommandOptionsRegistered } from './decorator/command.decor
 import { getNamedOptions } from './decorator/option.decorator'
 import { getPositionalOptions } from './decorator/positional.decorator'
 import { CommandCtor } from './decorator/types'
-import { Application, Context, IMidwayCLIOptions } from './interface'
+import { Application, Context, IMidwayCLIOptions, NextFunction } from './interface'
 
 const logNs = '[midway:cli]'
 
@@ -14,7 +14,8 @@ const logNs = '[midway:cli]'
 export class MidwayCLIFramework extends BaseFramework<
     Application,
     Context,
-    IMidwayCLIOptions
+    IMidwayCLIOptions,
+    NextFunction
 > {
     configure() {
         return this.configService.getConfiguration('cli')
@@ -115,27 +116,35 @@ export class MidwayCLIFramework extends BaseFramework<
             async (argv) => {
                 this.logger.info('%s executing command: %s', logNs, commandName)
 
-                const ctx = this.app.createAnonymousContext(
-                    new CLIContext(command, argv)
-                )
-                ctx.app = this.app
+                try {
+                    const ctx = this.app.createAnonymousContext(
+                        new CLIContext(command, argv)
+                    )
+                    ctx.app = this.app
 
-                const cmd = await ctx.requestContext.getAsync(commandClass)
+                    const commandMiddleware = middlewares != null
+                        ? await this.middlewareService.compose(middlewares, ctx.app)
+                        : undefined
 
-                ;[...named, ...positional].forEach(x => {
-                    const { key } = x
-                    const val = argv[key]
-                    if (val != null) {
-                        cmd[key] = val
-                    }
-                })
+                    const rootMiddleware = await this.applyMiddleware(commandMiddleware)
+                    await rootMiddleware(ctx, async() => {
+                        const cmd = await ctx.requestContext.getAsync(commandClass)
 
-                await Promise.resolve(cmd.run())
-                    .finally(() => {
-                        this.logger.info('%s executed command: %s', logNs, commandName)
+                        ;[...named, ...positional].forEach(x => {
+                            const { key } = x
+                            const val = argv[key]
+                            if (val != null) {
+                                cmd[key] = val
+                            }
+                        })
+
+                        await cmd.run()
                     })
+                } finally {
+                    this.logger.info('%s executed command: %s', logNs, commandName)
+                }
             },
-            middlewares,
+            undefined,
             deprecated
         )
     }

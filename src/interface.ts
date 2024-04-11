@@ -20,6 +20,8 @@ export type Context = IMidwayContext<CLIContext & {
     app: Application
 }>
 
+export type NextFunction = () => Promise<void>
+
 type yargsConfiguration = Pick<
     { [K in keyof Argv]?: Argv[K] extends ((x: infer P) => Argv) ? P : never },
     'detectLocale' |

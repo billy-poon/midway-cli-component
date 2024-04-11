@@ -5,7 +5,12 @@ import { AbstractCommand, Command, Option, Positional } from 'midway-cli-compone
     // <whose> 为必选参数
     // [adjective] 为可选参数
     command: 'hello <whose> [adjective]',
-    description: 'Say `Hello` to World!'
+    description: 'Say `Hello` to World!',
+    middlewares: [async (_, next) => {
+        console.log('>>>>>>')
+        await next()
+        console.log('<<<<<<')
+    }]
 })
 export class HelloCommand extends AbstractCommand
 {
