@@ -1,5 +1,4 @@
-export { CLIConfiguration as Configuration } from './configuration';
-export { MidwayCLIFramework as Framework } from './framework'
-export * from './interface'
+export { MidwayCliConfiguration as Configuration } from './configuration'
 export * from './decorator'
-export * from './command'
+export { MidwayCliFramework as Framework } from './framework'
+export * from './interface'

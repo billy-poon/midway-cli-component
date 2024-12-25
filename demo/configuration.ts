@@ -1,6 +1,7 @@
-import { App, Configuration, ILogger, IMidwayApplication, Logger } from '@midwayjs/core'
-import * as cli from 'midway-cli-component'
+import { App, Configuration, IMidwayApplication } from '@midwayjs/core'
 import { join } from 'path'
+import * as cli from '../src'
+import { FormatMiddleware } from './middleware/format.middleware'
 import { LoggerMiddleware } from './middleware/logger.middleware'
 
 @Configuration({
@@ -9,21 +10,14 @@ import { LoggerMiddleware } from './middleware/logger.middleware'
         join(__dirname, '/config/config.default.ts')
     ],
 })
-export class DemoConfiguration
-{
+export class DemoConfiguration {
     @App()
     app: IMidwayApplication
 
-    @Logger()
-    logger: ILogger
-
     async onReady() {
-        this.logger.info('demo application ready')
-
-        this.app.useMiddleware(LoggerMiddleware)
-    }
-
-    async onStop() {
-        this.logger.info('demo application stopping')
+        this.app.useMiddleware([
+            LoggerMiddleware,
+            FormatMiddleware,
+        ])
     }
 }

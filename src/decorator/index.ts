@@ -1,3 +1,4 @@
-export { Command, CommandOptions, COMMAND_KEY } from './command.decorator'
-export { Option, NamedOptions, NAMED_OPTION_KEY } from './option.decorator'
-export { Positional, PositionalOptions, POSITIONAL_OPTION_KEY } from './positional.decorator'
+export * from './command.decorator'
+export * from './option.decorator'
+export * from './positional.decorator'
+export * from './sub-command.decorator'

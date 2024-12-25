@@ -1,18 +1,9 @@
-import { AbstractCommand, Command, Option, Positional } from 'midway-cli-component'
+import { Command, Option, Positional, SubCommand } from '../../src'
 
 @Command({
-    // hello 为命令名
-    // <whose> 为必选参数
-    // [adjective] 为可选参数
-    command: 'hello <whose> [adjective]',
     description: 'Say `Hello` to World!',
-    middlewares: [async (_, next) => {
-        console.log('>>>>>>')
-        await next()
-        console.log('<<<<<<')
-    }]
 })
-export class HelloCommand extends AbstractCommand
+export class HelloCommand
 {
     @Option({
         description: 'Output in UPPERCASE'
@@ -29,7 +20,7 @@ export class HelloCommand extends AbstractCommand
     })
     adjective: string
 
-    async exec(...args: unknown[]): Promise<unknown> {
+    async exec(_: unknown, ...args: unknown[]): Promise<unknown> {
         let result = [
             'Hello,',
             this.whose,
@@ -42,9 +33,25 @@ export class HelloCommand extends AbstractCommand
         }
 
         if (args.length > 0) {
-            result += ' --' + args.join(' ')
+            result += ' -- ' + args.join(' ')
         }
 
         return result
+    }
+
+    @SubCommand({
+        description: 'Say `Hello` for multiple times.'
+    })
+    async repeat(
+        @Option('times', {
+            description: 'repeat for times'
+        })
+        times: number,
+        ...args: any
+    ) {
+        const item = await this.exec(null, ...args)
+        return times > 1
+            ? [...Array(times)].map(() => item)
+            : item
     }
 }

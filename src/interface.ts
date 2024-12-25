@@ -1,34 +1,50 @@
 import {
+    CommonMiddleware,
+    IMiddleware as CoreIMiddleware,
+    NextFunction as CoreNextFunction,
     IConfigurationOptions,
     IMidwayApplication,
-    IMidwayContext
+    IMidwayContext,
 } from '@midwayjs/core'
-import yargs from 'yargs'
-import type { CLIContext } from './context'
-
-type Argv = typeof yargs
+import { ArgumentsCamelCase, Argv } from 'yargs'
 
 export interface ICommand {
-    run(): void | Promise<void>
+    exec(..._: any): any
 }
 
-export type Application = IMidwayApplication<Context, {
-    plainArgv: string[]
-} & Argv>
+export type IMidwayCliNextFunction = CoreNextFunction
+export type NextFunction = IMidwayCliNextFunction
 
-export type Context = IMidwayContext<CLIContext & {
-    app: Application
+export type IMidwayCliContext = IMidwayContext<{
+    argv: ArgumentsCamelCase
+    body: unknown
+    exitCode?: number
+    command?: string
 }>
+export type Context = IMidwayCliContext
 
-export type NextFunction = () => Promise<void>
+export type IMiddleware = CoreIMiddleware<IMidwayCliContext, IMidwayCliNextFunction, void>
+export type IMidwayCliMiddleware = CommonMiddleware<IMidwayCliContext, IMidwayCliNextFunction, void>
+export type Middleware = IMidwayCliMiddleware
 
-type yargsConfiguration = Pick<
+export interface IMidwayCliApplication<T = object> extends IMidwayApplication<IMidwayCliContext, Argv<T>> {
+    args: Args,
+    prompt: () => Promise<string>
+    interactive: () => Promise<number>
+}
+
+export type Application = IMidwayCliApplication
+
+
+type YargsOptions = Pick<
     { [K in keyof Argv]?: Argv[K] extends ((x: infer P) => Argv) ? P : never },
     'detectLocale' |
     'env' |
-    'exitProcess' |
+    'epilog' |
+    'epilogue' |
+    // 'exitProcess' |
     'fail' |
-    'help' |
+    // 'help' |
     'locale' |
     'scriptName' |
     'showHelpOnFail' |
@@ -40,7 +56,11 @@ type yargsConfiguration = Pick<
     'wrap'
 >
 
-export type IMidwayCLIOptions = {
-    argv?: string[] | (() => string[])
-    yargs?: yargsConfiguration
-} & IConfigurationOptions
+type Factory<T> = T | (() => T | PromiseLike<T>)
+type Args = string | readonly string[]
+export interface IMidwayCliConfigurationOptions extends IConfigurationOptions {
+    cwd?: string
+    args?: Factory<Args>
+    yargs?: YargsOptions
+    prompt?: Factory<string>
+}

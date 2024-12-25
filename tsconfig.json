@@ -19,10 +19,7 @@
     "forceConsistentCasingInFileNames": true,
     "outDir": "dist",
 
-    "baseUrl": "./",
-    "paths": {
-      "midway-cli-component": ["src"]
-    }
+    "baseUrl": "./"
   },
   "exclude": [
     "dist",

@@ -1,34 +1,58 @@
-import { CommonMiddleware, Provide, saveClassMetadata, saveModule } from '@midwayjs/core'
-import { Context, ICommand, NextFunction } from '../interface'
-import { CommandCtor, CommandDecorator, Demand } from './types'
-import { toCommandKey } from './utils'
+import { getClassMetadata, listModule, Provide, saveClassMetadata, saveModule } from '@midwayjs/core'
+import { Middleware } from '../interface'
+import { Class } from '../types'
+import { listOption, OptionDefinition } from './option.decorator'
+import { listPositional, PositionalDefinition } from './positional.decorator'
 
-export const COMMAND_KEY = Symbol.for('COMMAND_KEY')
+const KEY = Symbol('midway-cli-component/decorator:command')
 
-export type CommandOptions = {
-    command?: string | readonly string[],
-    description?: string | false,
-    middlewares?: CommonMiddleware<Context, NextFunction, void>[],
-    deprecated?: boolean | string,
+export interface CommandOptions {
+    name?: string
+    aliases?: readonly string[]
+    command?: string | readonly string[]
+    description?: string | false
+    deprecated?: boolean | string
+
+    middlewares?: Middleware[]
+    method?: PropertyKey
 }
-export type CommandOptionsRegistered = Demand<CommandOptions, 'command'>
 
-export function Command(): CommandDecorator
-export function Command(command: string): CommandDecorator
-export function Command(options: CommandOptions): CommandDecorator
-export function Command(options?: string | CommandOptions, description?: string | false) {
-    const opts: CommandOptions = typeof options === 'string'
-        ? { command: options, description }
-        : { ...options }
-    return <T extends ICommand>(target: CommandCtor<T>) => {
-        const { command, ...rest } = opts
-        const registered: CommandOptionsRegistered = {
-            command: command ?? toCommandKey(target.name),
-            ...rest
-        }
+export function Command(command: string): ClassDecorator
+export function Command(options?: CommandOptions): ClassDecorator
+export function Command(x?: string | CommandOptions): ClassDecorator {
+    const options = typeof x === 'string'
+        ? { command: x }
+        : x ?? {}
 
-        saveModule(COMMAND_KEY, target)
-        saveClassMetadata(COMMAND_KEY, registered, target)
+    return (target) => {
+        saveModule(KEY, target)
+        saveClassMetadata(KEY, options, target)
+
         Provide()(target)
+    }
+}
+
+export type CommandDefinition = CommandOptions & {
+    method?: PropertyKey
+    commandClass: Class,
+    options: OptionDefinition[]
+    positionals: PositionalDefinition[]
+}
+
+export function listCommandClass() {
+    return listModule(KEY) as Class[]
+}
+
+export function getCommandDefinition(theClass: Class): CommandDefinition {
+    const options: CommandOptions | undefined = getClassMetadata(KEY, theClass)
+    // if (options == null) {
+    //     throw new Error('Not registered: ' + theClass.name)
+    // }
+
+    return {
+        ...options,
+        commandClass: theClass,
+        options: listOption(theClass),
+        positionals: listPositional(theClass),
     }
 }

@@ -1,3 +1,6 @@
+// eslint-disable-next-line @typescript-eslint/triple-slash-reference
+/// <reference path="../../index.d.ts" />
+
 import { MidwayConfig } from '@midwayjs/core'
 
 export default {
@@ -7,8 +10,6 @@ export default {
       // strict: false,
       // strictCommands: false,
       strictOptions: false,
-      // make sure `MidwayCLIFramework.destroy()` invoked
-      exitProcess: false,
     }
   }
 } as MidwayConfig
