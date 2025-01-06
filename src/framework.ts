@@ -49,15 +49,15 @@ export class MidwayCliFramework extends BaseFramework<
 > {
     declare app: IMidwayCliApplication<ParsedArguments>
 
-    clear() {
+    #clear() {
         console.clear?.()
     }
 
-    stdout(...args: any) {
+    #stdout(...args: any) {
         console.log(...args)
     }
 
-    stderr(...args: any) {
+    #stderr(...args: any) {
         console.error(...args)
     }
 
@@ -72,7 +72,6 @@ export class MidwayCliFramework extends BaseFramework<
             cwd,
             args = defaultArgs,
             yargs: yargsOptions,
-            prompt = defaultPrompt,
         } = this.configurationOptions
 
         const theArgs = typeof args === 'function'
@@ -113,15 +112,13 @@ export class MidwayCliFramework extends BaseFramework<
         this.app = app as Application
         this.defineApplicationProperties({
             args: theArgs,
-            prompt: async () => typeof prompt === 'function'
-                ? await prompt() : prompt,
             interactive: () => this.interactive(),
             useMiddleware: (x: Middleware) => this.useMiddleware(x),
         })
         this.useMiddleware(async (ctx, next) => {
             const result = (await next()) ?? ctx.body
             if (result != null) {
-                this.stdout(result)
+                this.#stdout(result)
             }
         })
 
@@ -179,70 +176,41 @@ export class MidwayCliFramework extends BaseFramework<
             output: process.stdout,
         })
 
+        const { prompt = defaultPrompt } = this.configurationOptions
+        const promptFn = async () => typeof prompt === 'function'
+            ? await prompt() : prompt
+
         const app = this.app
 
         let exitCode: number | undefined
-        const run = () => new Promise<void>((resolve, reject) => {
-            app.prompt()
-                .then((prompt) => {
-                    dev.question(prompt, async (args) => {
-                        try {
-                            const argv = await app.parseAsync(args)
-                            const { command, exitCode: code } = argv[REQUEST_CONTEXT] ?? {}
-                            if (code != null) {
-                                exitCode = code
-                            }
+        const run = () => promptFn().then((prompt) => new Promise<void>((resolve) => {
+            dev.question(prompt, async (args) => {
+                try {
+                    const argv = await app.parseAsync(args)
+                    const { command, exitCode: code } = argv[REQUEST_CONTEXT] ?? {}
+                    if (code != null) {
+                        exitCode = code
+                    }
 
-                            if (command == null) {
-                                const requestCommand = argv[REQUEST_COMMAND] as string
-                                if (requestCommand != null) {
-                                    if (['exit', 'quit', 'byte'].includes(requestCommand)) {
-                                        return resolve()
-                                    } else if (['clear', 'cls'].includes(requestCommand)) {
-                                        this.clear()
-                                    } else {
-                                        this.#unknownCommand(requestCommand)
-                                    }
-                                }
+                    if (command == null) {
+                        const requestCommand = argv[REQUEST_COMMAND] as string
+                        if (requestCommand != null) {
+                            if (['exit', 'quit', 'byte'].includes(requestCommand)) {
+                                return resolve()
+                            } else if (['clear', 'cls'].includes(requestCommand)) {
+                                this.#clear()
+                            } else {
+                                this.#unknownCommand(requestCommand)
                             }
-                        } catch (err) {
-                            this.stderr(err?.message ?? err)
                         }
+                    }
+                } catch (err) {
+                    this.#stderr(err?.message ?? err)
+                }
 
-                        await run()
-                        resolve()
-                    })
-                })
-                .catch(err => reject(err))
-            // const prompt = await app.prompt()
-            // dev.question(prompt, async (args) => {
-            //     try {
-            //         const argv = await app.parseAsync(args)
-            //         const { command, exitCode: code } = argv[REQUEST_CONTEXT] ?? {}
-            //         if (code != null) {
-            //             exitCode = code
-            //         }
-
-            //         if (command == null) {
-            //             const requestCommand = argv[REQUEST_COMMAND] as string
-            //             if (requestCommand != null) {
-            //                 if (['exit', 'quit', 'byte'].includes(requestCommand)) {
-            //                     return resolve()
-            //                 } else if (['clear', 'cls'].includes(requestCommand)) {
-            //                     this.clear()
-            //                 } else {
-            //                     this.#unknownCommand(requestCommand)
-            //                 }
-            //             }
-            //         }
-            //     } catch(err) {
-            //         this.stderr(err?.message ?? err)
-            //     }
-
-            //     await run()
-            //     resolve()
-            // })
-        })
+                resolve(await run())
+            })
+        }))
 
         await run().finally(() => dev.close())
         return exitCode ?? 0
@@ -260,7 +228,7 @@ export class MidwayCliFramework extends BaseFramework<
         process.exitCode = exitCode
 
         if (err != null) {
-            this.stderr(err.message ?? err)
+            this.#stderr(err.message ?? err)
         }
 
         const cleanup = wait()

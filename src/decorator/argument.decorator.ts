@@ -4,7 +4,7 @@ import { identity } from '../util/inflect'
 import { inferType } from '../util/yargs'
 import { createParameterDecorator } from './parameter.decorator'
 
-export interface ArgumentOptions {
+interface ArgumentOptions {
     type?: string
 }
 
@@ -26,8 +26,8 @@ export function createArgumentDecorator<T extends ArgumentOptions>(name?: string
     }
 
     name = name ?? 'decorator'
-    const KEY = Symbol(`midway-cli-component/decorator:argument:${name}`)
-    const PARAMETER_KEY = Symbol(`midway-cli-component/decorator:argument:${name}:parameter`)
+    const KEY = `midway-cli-component/decorator:argument:${name}`
+    const PARAMETER_KEY = `midway-cli-component/decorator:argument:${name}:parameter`
 
     function save(options?: T): PropertyDecorator
     function save(key: string, options?: T): PropertyDecorator & ParameterDecorator
@@ -68,6 +68,7 @@ export function createArgumentDecorator<T extends ArgumentOptions>(name?: string
 
         if (theMethod != null) {
             const items = (listPropertyDataFromClass(PARAMETER_KEY, theClass) as Meta[])
+                .filter(({ key }) => key === theMethod)
                 .map(({ key, options }): Definition => ({
                     ...(options as Definition),
                     type: options.type ?? inferType(theClass, key, options.parameterIndex)

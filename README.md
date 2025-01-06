@@ -21,6 +21,39 @@ yarn add midway-cli-component
 pnpm add midway-cli-component
 ```
 
+## Bootstrap
+```
+// $baseDir/cli.js
+
+const { Bootstrap } = require('@midwayjs/bootstrap');
+const { join } = require('path');
+
+
+function createCliLogger() {
+    const noop = () => { }
+    return {
+        info: noop,
+        debug: noop,
+        warn: noop,
+        error: console.error
+    }
+}
+
+async function main() {
+    const file = join(__dirname, 'dist/cli/configuration.js')
+    const { MainConfiguration } = await import(file)
+
+    Bootstrap
+        .configure({
+            imports: [MainConfiguration],
+            logger: createCliLogger(),
+        })
+        .run();
+}
+
+main()
+```
+
 ## 配置选项
 ```
 // $baseDir/config/config.default.ts
@@ -29,13 +62,13 @@ export default {
     cli: {
         // 要解析的命令参数
         // 留空会调用 `yargs/helpers` 的 `hideBin(process.argv)` 获得
-        argv: ['my-app', 'do/some/work', 'in', 'CLI', '--verbose'],
+        argv: ['demo-app', 'do/some/work', 'in', 'CLI', '--verbose'],
 
         // 这部分的配置等同于调用 `yargs.KEY(VALUE)`
         yargs: {
             // 等同于调用：
-            // `yargs.scriptName('my-demo-app')`
-            scriptName: 'my-demo-app',
+            // `yargs.scriptName('demo-app')`
+            scriptName: 'demo-app',
             usage: '$0 <command> [...options] [...args]',
             ...
         },
@@ -46,54 +79,34 @@ export default {
 
 ## 开启组件
 ```
-// $baseDir/configuration.ts
+// $baseDir/cli/configuration.ts
 ...
-
-// 非必须，仅以 @midwayjs/koa 为例
-import * as koa from '@midwayjs/koa';
 import * as cli from 'midway-cli-component'
-
-// 注意 CLI 组件必须作为主框架运行
-const main = process.env.NODE_ENV === 'cli' ? cli : koa
 ...
 
 @Configuration({
     imports: [
-        main,
+        cli,
         ...
     ],
     ...
 })
 export class MainConfiguration {
     @App()
-    app: IMidwayApplication;
-
-    async onReady() {
-        if (main !== cli) {
-            const app = this.app as koa.Application
-            app.useMiddleware([...])
-            app.useFilter([...])
-            app.useGuard([...])
-            ...
-        }
-    }
+    app: cli.Application
 }
 ```
 
 ## 定义命令
 ```
-// $baseDir/command/hello.command.ts
+// $baseDir/cli/command/hello.command.ts
 
-import { AbstractCommand, Command, Option, Positional } from 'midway-cli-component'
+import { Command, Context, Option, Positional, SubCommand } from 'midway-cli-component'
 
 @Command({
-    // hello 为命令名
-    // <whose> 为必选参数
-    // [adjective] 为可选参数
-    command: 'hello <whose> [adjective]',
-    description: 'Say `Hello` to World!'
+    description: 'Say `Hello` to World!',
 })
-export class HelloCommand extends AbstractCommand
+export class HelloCommand
 {
     @Option({
         description: 'Output in UPPERCASE'
@@ -110,7 +123,7 @@ export class HelloCommand extends AbstractCommand
     })
     adjective: string
 
-    async exec(...args: unknown[]): Promise<unknown> {
+    async exec(_: Context, ...args: unknown[]): Promise<unknown> {
         let result = [
             'Hello,',
             this.whose,
@@ -123,61 +136,56 @@ export class HelloCommand extends AbstractCommand
         }
 
         if (args.length > 0) {
-            result += ' --' + args.join(' ')
+            result += ' -- ' + args.join(' ')
         }
 
         return result
     }
-}
-```
 
-## 兜底命令
-```
-// $baseDir/command/fallback.command.ts
-
-import { Command, ICommand } from 'midway-cli-component'
-
-@Command({
-    command: '*',
-    // 在 Help 信息中隐藏此命令
-    description: false,
-})
-export class FallbackCommand implements ICommand
-{
-    run(): void | Promise<void> {
-        // 直接抛出错误，让 yargs 显示 Help
-        throw new Error('Unknown command')
+    @SubCommand({
+        description: 'Say `Hello` for multiple times.'
+    })
+    async repeat(
+        @Option('times', {
+            description: 'repeat for times'
+        })
+        times: number,
+        ...args: any
+    ) {
+        const item = await this.exec(null as any, ...args)
+        return times > 1
+            ? [...Array(times)].map(() => item)
+            : item
     }
 }
 ```
 
 ## 运行命令
+```json
+// $baseDir/package.json
+...
+  "scripts": {
+    "start:cli": "NODE_ENV=production node ./cli.js",
+    "dev:cli": "cross-env NODE_ENV=local mwtsc --watch --run ./cli.js",
+  },
+...
+
+```bash
+npm run dev hello my pretty -s -- @billy-poon
+----------------
+Hello, my pretty World! -- @billy-poon
+----------------
+
+npm run dev hello/repeat --times 3 my pretty -s -- @billy-poon
+----------------
+[
+  'Hello, my pretty World! -- @billy-poon',
+  'Hello, my pretty World! -- @billy-poon',
+  'Hello, my pretty World! -- @billy-poon'
+]
+----------------
 ```
-# development 环境下需要 ts-node 或 tsx
-npx cross-env NODE_ENV=cli tsx bootstrap.js hello --help
-npx cross-env NODE_ENV=cli tsx bootstrap.js hello --version
 
-npx cross-env NODE_ENV=cli tsx bootstrap.js hello my
-npx cross-env NODE_ENV=cli tsx bootstrap.js hello my beautiful @billy-poon --loudly --no-json
+## Demo
 
-# production 环境
-npx cross-env NODE_ENV=cli node bootstrap.js hello my beautiful @billy-poon --loudly --no-json
-
-# output
-2023-12-06 11:34:15.163 INFO 3301636 [midway:bootstrap] current app started
-HELLO, MY BEAUTIFUL WORLD! --@billy-poon
-2023-12-06 11:34:15.173 INFO 3301636 [midway:bootstrap] exit with code:0
-```
-
-## 关闭 `[midway:bootstrap]` 控制台日志
-```
-// $appDir/bootstrap.js
-
-const { Bootstrap } = require('@midwayjs/bootstrap');
-const { join } = require('path');
-Bootstrap
-    .configure({
-        logger: false,
-    })
-    .run();
-```
+参考 [./demo](./demo)

@@ -1,4 +1,4 @@
-import { Command, Option, Positional, SubCommand } from '../../src'
+import { Command, Context, Option, Positional, SubCommand } from '../../src'
 
 @Command({
     description: 'Say `Hello` to World!',
@@ -20,7 +20,7 @@ export class HelloCommand
     })
     adjective: string
 
-    async exec(_: unknown, ...args: unknown[]): Promise<unknown> {
+    async exec(_: Context, ...args: unknown[]): Promise<unknown> {
         let result = [
             'Hello,',
             this.whose,
@@ -49,7 +49,7 @@ export class HelloCommand
         times: number,
         ...args: any
     ) {
-        const item = await this.exec(null, ...args)
+        const item = await this.exec(null as any, ...args)
         return times > 1
             ? [...Array(times)].map(() => item)
             : item

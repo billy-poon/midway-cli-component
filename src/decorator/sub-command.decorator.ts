@@ -4,7 +4,7 @@ import { CommandDefinition, CommandOptions } from './command.decorator'
 import { listOption } from './option.decorator'
 import { listPositional } from './positional.decorator'
 
-const KEY = Symbol('midway-cli-component/decorator:sub-command')
+const KEY = 'midway-cli-component/decorator:sub-command'
 
 type Meta = {
     key: PropertyKey,

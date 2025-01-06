@@ -1,7 +1,7 @@
-import yargs from 'yargs'
+import { PositionalOptions as _PositionalOptions } from 'yargs'
 import { createArgumentDecorator, DefinitionOf } from './argument.decorator'
 
-export interface PositionalOptions extends yargs.PositionalOptions {
+export interface PositionalOptions extends _PositionalOptions {
     order?: number
 }
 

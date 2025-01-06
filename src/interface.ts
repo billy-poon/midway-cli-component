@@ -29,7 +29,6 @@ export type Middleware = IMidwayCliMiddleware
 
 export interface IMidwayCliApplication<T = object> extends IMidwayApplication<IMidwayCliContext, Argv<T>> {
     args: Args,
-    prompt: () => Promise<string>
     interactive: () => Promise<number>
 }
 

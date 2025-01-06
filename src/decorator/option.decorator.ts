@@ -1,10 +1,10 @@
-import yargs from 'yargs'
+import { Options } from 'yargs'
 import { createArgumentDecorator, DefinitionOf } from './argument.decorator'
 
-export interface OptionOptions extends yargs.Options {}
-export type OptionDefinition = DefinitionOf<OptionOptions>
+export type NamedOptions = Options
+export type NamedDefinition = DefinitionOf<NamedOptions>
 
 export const {
     save: Option,
     list: listOption
-} = createArgumentDecorator<yargs.Options>('option')
+} = createArgumentDecorator<NamedOptions>('option')

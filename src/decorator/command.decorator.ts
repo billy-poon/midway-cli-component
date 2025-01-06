@@ -1,10 +1,10 @@
 import { getClassMetadata, listModule, Provide, saveClassMetadata, saveModule } from '@midwayjs/core'
 import { Middleware } from '../interface'
 import { Class } from '../types'
-import { listOption, OptionDefinition } from './option.decorator'
+import { listOption, NamedDefinition } from './option.decorator'
 import { listPositional, PositionalDefinition } from './positional.decorator'
 
-const KEY = Symbol('midway-cli-component/decorator:command')
+const KEY = 'midway-cli-component/decorator:command'
 
 export interface CommandOptions {
     name?: string
@@ -35,7 +35,7 @@ export function Command(x?: string | CommandOptions): ClassDecorator {
 export type CommandDefinition = CommandOptions & {
     method?: PropertyKey
     commandClass: Class,
-    options: OptionDefinition[]
+    options: NamedDefinition[]
     positionals: PositionalDefinition[]
 }
 
