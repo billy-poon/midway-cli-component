@@ -169,6 +169,7 @@ export class HelloCommand
     "dev:cli": "cross-env NODE_ENV=local mwtsc --watch --run ./cli.js",
   },
 ...
+```
 
 ```bash
 npm run dev hello my pretty -s -- @billy-poon
